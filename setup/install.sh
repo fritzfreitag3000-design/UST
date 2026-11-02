@@ -28,15 +28,15 @@ install_dependencies() {
         tmux qstat python3 ufw iptables tar curl ca-certificates lib32gcc-s1
 }
 
-# Task 1.1: Systembenutzer ohne Passwort-Login
+# Task 1.1: Systembenutzer mit Passwort-Login
 create_user() {
     if id "$SERVICE_USER" &>/dev/null; then
         echo "[1.1] Benutzer ${SERVICE_USER} existiert bereits."
     else
         echo "[1.1] Lege Benutzer ${SERVICE_USER} an ..."
         useradd --create-home --shell /bin/bash --comment "DayZ AO-Server" "$SERVICE_USER"
-        passwd --lock "$SERVICE_USER" >/dev/null
     fi
+    passwd "$SERVICE_USER"
     chmod 750 "/home/${SERVICE_USER}"
 }
 
@@ -122,8 +122,8 @@ EOF
     echo "[service] ${unit} aktiviert (Start nach Konfiguration: systemctl start ${unit})."
 }
 
-install_dependencies
 create_user
+install_dependencies
 create_directories
 init_steamcmd
 deploy_manager
