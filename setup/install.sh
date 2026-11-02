@@ -212,4 +212,11 @@ install_service
 
 echo "Setup für '${SERVER_NAME}' abgeschlossen: ${BASE_DIR}"
 echo "Startbefehl: sudo -u ${SERVICE_USER} ao-${SERVER_NAME}"
-echo "Vor dem Serverstart bitte server.cfg, DayZ-Serverdaten und bercon-cli konfigurieren."
+echo "Vor dem Serverstart bitte server.cfg und bercon-cli konfigurieren."
+
+# Wechsel in das Home-Verzeichnis des Dienstbenutzers und Start des Server-Downloads als dieser Benutzer.
+install -m 750 -o "$SERVICE_USER" -g "$SERVICE_USER" \
+    "$(dirname "$0")/server_setup.sh" "$BASE_DIR/server_setup.sh"
+echo "Wechsle zu Benutzer ${SERVICE_USER} und starte server_setup.sh ..."
+cd "/home/${SERVICE_USER}"
+exec su - "$SERVICE_USER" -c "cd '${BASE_DIR}' && ./server_setup.sh '${BASE_DIR}'"
