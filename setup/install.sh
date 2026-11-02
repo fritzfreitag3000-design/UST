@@ -73,6 +73,12 @@ deploy_manager() {
     chmod 600 "$BASE_DIR/server_manager/server.cfg"
 }
 
+install_launcher() {
+    local launcher="/usr/local/bin/ao-${SERVER_NAME}"
+    ln -sfn "$BASE_DIR/server_manager/ao.sh" "$launcher"
+    echo "[launcher] Globaler Befehl installiert: ${launcher}"
+}
+
 # Erlaubt dem Dienstbenutzer nur die beiden Firewall-Regeln für den Game-Port (GAME_PORT muss zu server.cfg passen).
 install_sudoers() {
     local tmp target="/etc/sudoers.d/ao-${SERVICE_USER}-${SERVER_NAME}"
@@ -121,6 +127,7 @@ create_user
 create_directories
 init_steamcmd
 deploy_manager
+install_launcher
 install_sudoers
 install_service
 
