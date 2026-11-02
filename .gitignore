@@ -1,0 +1,6 @@
+__pycache__/
+server_manager/logs/
+server_manager/state
+server_manager/.lock
+server_manager/monitor.pid
+server_manager/maintenance.lock
