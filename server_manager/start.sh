@@ -128,4 +128,5 @@ done
 
 hard_kill
 log "Start nach $START_RETRIES Versuchen fehlgeschlagen."
+notify "Start nach $START_RETRIES Versuchen fehlgeschlagen."
 exit 1

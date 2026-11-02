@@ -103,6 +103,16 @@ cleanup_mods() {
     # Verwaiste Key-Links werden in extract_keys() neu aufgebaut.
 }
 
+update_server() {
+    if [[ $STEAM_USER == CHANGE_ME ]]; then
+        log "STEAM_USER in server.cfg ist nicht gesetzt."
+        return 1
+    fi
+    log "Aktualisiere DayZ-Server (App ${SERVER_APPID:-223350}) ..."
+    "$STEAMCMD_DIR/steamcmd.sh" +force_install_dir "$SERVER_DIR" +login "$STEAM_USER" \
+        +app_update "${SERVER_APPID:-223350}" validate +quit
+}
+
 sync_mods() {
     cleanup_mods
     update_mods || { extract_keys; return 1; }
@@ -113,9 +123,10 @@ if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
     case "${1:-sync}" in
         sync) sync_mods ;;
         update) update_mods ;;
+        server) update_server ;;
         keys) extract_keys ;;
         clean) cleanup_mods; extract_keys ;;
         list) mod_ids ;;
-        *) echo "Verwendung: $0 [sync|update|keys|clean|list]" >&2; exit 1 ;;
+        *) echo "Verwendung: $0 [sync|update|server|keys|clean|list]" >&2; exit 1 ;;
     esac
 fi

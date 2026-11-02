@@ -19,9 +19,30 @@ OP_LOCK_FILE="$MANAGER_DIR/.lock"
 # shellcheck source=../server.cfg
 source "$MANAGER_DIR/server.cfg"
 
+rotate_log() {
+    local size
+    size="$(stat -c %s "$1" 2>/dev/null || echo 0)"
+    (( size > ${LOG_MAX_BYTES:-5242880} )) && mv -f "$1" "$1.1"
+    return 0
+}
+
 log() {
+    local line
     mkdir -p "$LOG_DIR"
-    printf '%s [%s] %s\n' "$(date '+%F %T')" "${LOG_TAG:-ao}" "$*" | tee -a "$LOG_DIR/ao.log" >&2
+    rotate_log "$LOG_DIR/ao.log"
+    line="$(date '+%F %T') [${LOG_TAG:-ao}] $*"
+    echo "$line" >> "$LOG_DIR/ao.log"
+    [[ -t 2 ]] && echo "$line" >&2
+    return 0
+}
+
+# Discord-Webhook; schlägt nie fehl und blockiert höchstens 10 s.
+notify() {
+    local payload
+    [[ ${DISCORD_WEBHOOK_URL:-} == https://* ]] || return 0
+    payload="$(python3 -c 'import json,sys; print(json.dumps({"content": sys.argv[1]}))' "[$TMUX_SESSION] $*")" || return 0
+    curl -fsS -m 10 -H 'Content-Type: application/json' -d "$payload" "$DISCORD_WEBHOOK_URL" >/dev/null 2>&1
+    return 0
 }
 
 # Zustand, den start.sh/stop.sh setzen: STARTING, ONLINE, STOPPING, STOPPED.
@@ -97,13 +118,24 @@ create_backup() {
     fi
     mkdir -p "$BACKUP_DIR"
     file="$BACKUP_DIR/storage_1_$(date +%Y%m%d_%H%M%S).tar.gz"
-    if tar -czf "$file" -C "$(dirname "$STORAGE_DIR")" "$(basename "$STORAGE_DIR")"; then
+    if tar -czf "$file" -C "$(dirname "$STORAGE_DIR")" "$(basename "$STORAGE_DIR")" && tar -tzf "$file" >/dev/null; then
         log "Backup erstellt: $file"
+        prune_backups
     else
         rm -f "$file"
-        log "Backup fehlgeschlagen."
+        log "Backup fehlgeschlagen oder defekt."
+        notify "Backup fehlgeschlagen."
         return 1
     fi
+}
+
+prune_backups() {
+    local keep="${BACKUP_KEEP:-0}" old
+    (( keep > 0 )) || return 0
+    while read -r old; do
+        rm -f -- "$old"
+    done < <(ls -1t "$BACKUP_DIR"/storage_1_*.tar.gz 2>/dev/null | tail -n +$((keep + 1)))
+    return 0
 }
 
 latest_backup() { ls -1t "$BACKUP_DIR"/storage_1_*.tar.gz 2>/dev/null | head -n1; }

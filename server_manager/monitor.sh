@@ -52,6 +52,7 @@ handle_corruption() {
     if (( rollbacks >= MAX_ROLLBACKS )); then
         log "Datenbankfehler nach $rollbacks Rollbacks weiterhin vorhanden - Wartungssperre gesetzt."
         touch "$LOCK_FILE"
+        notify "Wartungssperre gesetzt: Datenbankfehler besteht nach $rollbacks Rollbacks weiter."
         return
     fi
     rollbacks=$((rollbacks + 1))
@@ -70,6 +71,7 @@ check_once() {
         OFFLINE)
             if [[ "$(get_state)" == ONLINE ]]; then
                 log "Serverprozess fehlt (Crash)."
+                notify "Serverprozess fehlt (Crash) - Recovery läuft."
                 recover_crash
             fi
             return ;;
@@ -105,6 +107,15 @@ check_once() {
 }
 
 run_loop() {
+    local other
+    other="$(monitor_pid)"
+    if [[ -n $other && $other != "$$" ]]; then
+        log "Monitor läuft bereits (PID $other)."
+        exit 0
+    fi
+    echo $$ > "$PID_FILE"
+    trap 'rm -f "$PID_FILE"' EXIT
+    trap 'exit 0' INT TERM
     log "Monitor gestartet (PID $$)."
     while true; do
         check_once
@@ -125,8 +136,7 @@ case "${1:-status}" in
             echo "Monitor läuft bereits (PID $(monitor_pid))."
         else
             mkdir -p "$LOG_DIR"
-            setsid nohup "$0" run >>"$LOG_DIR/monitor.out" 2>&1 9>&- &
-            echo $! > "$PID_FILE"
+            setsid nohup "$0" run >>"$LOG_DIR/ao.log" 2>&1 9>&- &
             echo "Monitor gestartet (PID $!)."
         fi ;;
     stop)

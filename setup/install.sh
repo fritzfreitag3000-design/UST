@@ -88,11 +88,40 @@ install_sudoers() {
     rm -f "$tmp"
 }
 
+# Monitor beim Booten starten; KillMode=process, damit ein Dienst-Neustart den Gameserver nicht beendet.
+install_service() {
+    local unit="ao-monitor-${SERVER_NAME}.service"
+    if ! command -v systemctl >/dev/null || [[ ! -d /run/systemd/system ]]; then
+        echo "[service] systemd nicht verfügbar - übersprungen (Monitor per 'ao.sh monitor start')."
+        return 0
+    fi
+    cat > "/etc/systemd/system/${unit}" <<EOF
+[Unit]
+Description=AO-Server Monitor (${SERVER_NAME})
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=${SERVICE_USER}
+ExecStart=${BASE_DIR}/server_manager/monitor.sh run
+Restart=on-failure
+RestartSec=10
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    systemctl daemon-reload
+    systemctl enable "$unit" >/dev/null
+    echo "[service] ${unit} aktiviert (Start nach Konfiguration: systemctl start ${unit})."
+}
+
 install_dependencies
 create_user
 create_directories
 init_steamcmd
 deploy_manager
 install_sudoers
+install_service
 
 echo "Setup für '${SERVER_NAME}' abgeschlossen: ${BASE_DIR}"
