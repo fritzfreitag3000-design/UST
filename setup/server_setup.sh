@@ -35,4 +35,5 @@ if [[ -f "$CFG" ]] && grep -q '^STEAM_USER="CHANGE_ME"' "$CFG"; then
     echo "STEAM_USER in server.cfg gesetzt."
 fi
 
-echo "DayZ-Server-Download abgeschlossen."
+echo "DayZ-Server-Download abgeschlossen. Starte ao.sh ..."
+exec "$BASE_DIR/server_manager/ao.sh"
