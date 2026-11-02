@@ -14,38 +14,44 @@ Serverstart und -stopp, Mod-Verwaltung, Backups, Statusabfragen und automatische
 - `bercon-cli` für RCON-Steuerung; es muss im `PATH` des Dienstbenutzers
   verfügbar sein
 
-Das Installationsskript installiert Systempakete und SteamCMD und legt den
-Dienstbenutzer sowie die Verzeichnisstruktur an. Es konfiguriert **nicht**
-automatisch den DayZ-Server, RCON oder die Mod-Liste. Diese Schritte sind unten
-beschrieben.
+Der Installationsassistent führt die nötigen Infrastruktur-Schritte nacheinander
+aus: Dienstbenutzer, Systempakete, Verzeichnisse, SteamCMD, Manager, Firewall-
+Berechtigung und Monitor-Dienst. Er konfiguriert **nicht** automatisch den
+DayZ-Server, RCON oder die Mod-Liste. Diese Schritte sind unten beschrieben.
 
 ## Installation
 
-Im Verzeichnis des ausgecheckten Projekts ausführen:
+Im Verzeichnis des ausgecheckten Projekts starten:
 
 ```bash
-sudo ./setup/install.sh <server-name>
+sudo ./setup/install.sh
 ```
 
-Zum Beispiel:
+Der Assistent fragt nach dem Servernamen und dem Linux-Dienstbenutzer. Für den
+Benutzer `dayz_ao` kann einfach Enter gedrückt werden. Danach zeigt er die
+Einstellungen zur Bestätigung an und führt die Installation durch. Für einen
+neuen oder noch gesperrten Benutzer wird ein Passwort abgefragt; ein bereits
+aktiver Passwortzugang bleibt bei erneuten Installationsläufen unverändert.
+
+Der Servername kann auch direkt übergeben werden, dann entfällt diese Frage:
 
 ```bash
 sudo ./setup/install.sh chernarus
 ```
 
-Standardmäßig wird der Systembenutzer `dayz_ao` angelegt und das Tool nach
-`/home/dayz_ao/chernarus/server_manager` kopiert. Ein anderer Benutzer kann über
-`SERVICE_USER` gewählt werden:
+Standardmäßig wird `dayz_ao` als Systembenutzer vorgeschlagen und das Tool zum
+Beispiel nach `/home/dayz_ao/chernarus/server_manager` kopiert. Ein anderer
+Benutzer kann im Assistenten eingegeben oder als Vorschlag vorgegeben werden:
 
 ```bash
-sudo SERVICE_USER=dayz ./setup/install.sh chernarus
+sudo env SERVICE_USER=dayz ./setup/install.sh chernarus
 ```
 
-Das Skript installiert unter anderem `tmux`, `qstat`, Python 3, `ufw`,
+Das Setup installiert unter anderem `tmux`, `qstat`, Python 3, `ufw`,
 `iptables`, `curl` und SteamCMD. Es richtet außerdem eine eingeschränkte
 `sudoers`-Regel für die Firewall ein. Falls `systemd` vorhanden ist, wird der
 Monitor-Dienst angelegt und für den Systemstart aktiviert; er wird durch das
-Setup noch nicht gestartet.
+Setup noch nicht gestartet. Der Assistent benötigt ein interaktives Terminal.
 
 ## Erstkonfiguration
 
