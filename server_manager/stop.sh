@@ -11,6 +11,16 @@ if [[ ! $minutes =~ ^[0-9]+$ ]]; then
     exit 1
 fi
 
+# BattlEye kennt kein "alle kicken": Spielernummern aus 'players' lesen und einzeln kicken.
+kick_all_players() {
+    local list num
+    list="$(rcon players)" || return 1
+    while read -r num _; do
+        [[ $num =~ ^[0-9]+$ ]] && rcon "kick $num" >/dev/null
+    done <<< "$list"
+    return 0
+}
+
 # Task 4.2
 graceful_shutdown() {
     if (( minutes > 0 )); then
@@ -18,7 +28,7 @@ graceful_shutdown() {
         sleep $((minutes * 60))
     fi
     rcon "$RCON_LOCK_CMD" >/dev/null || return 1
-    rcon "$RCON_KICK_ALL_CMD" >/dev/null || return 1
+    kick_all_players || return 1
     rcon "$RCON_SHUTDOWN_CMD" >/dev/null || return 1
 }
 
