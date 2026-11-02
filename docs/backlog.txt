@@ -1,0 +1,58 @@
+PROJEKT-BACKLOG
+AO-Server Tool (DayZ Management Framework)
+Datum: 30. Oktober 2026
+Dokument-Typ: Aufgabenliste / Backlog
+EPIC 1 System- & Infrastruktur-Setup
+Task 1.1 Benutzerverwaltung: Dedizierten Systembenutzer dayz_ao unter Ubuntu 24.04 LTS anlegen
+und Berechtigungen konﬁgurieren.
+Task 1.2 Verzeichnisstruktur: Die Basisordner /steamcmd, /server_data und /server_manager im
+Home-Verzeichnis des neuen Benutzers erstellen.
+Task 1.3 Abhängigkeiten installieren: Notwendige Systempakete (tmux, qstat/Python für Query,
+ufw/iptables, tar) über den Paketmanager installieren.
+Task 1.4 SteamCMD initialisieren: SteamCMD-Binaries in das /steamcmd-Verzeichnis herunterladen
+und den Erstdurchlauf ausführen.
+EPIC 2 Mod- & Key-Management
+Task 2.1 Konﬁgurations-Parser: Ein Bash-Skript entwickeln, das die Datei mods.cfg zeilenweise
+einliest und die Mod-IDs extrahiert.
+Task 2.2 Download-Routine: Eine Funktion schreiben, die aus den extrahierten IDs dynamisch den
+SteamCMD-Update-Befehl zusammenbaut und ausführt.
+Task 2.3 Key-Extraktor: Einen rekursiven find-Befehl implementieren, der nach dem Download alle
+.bikey-Dateien in den Mod-Ordnern sucht und ﬂach in server_data/keys/ verlinkt/kopiert.
+Task 2.4 Bereinigungs-Skript (Clean-up): Eine Logik einbauen, die nicht mehr in der mods.cfg
+gelistete Mods sowie deren verwaiste Keys und Symlinks restlos löscht.
+EPIC 3 Start-Prozedur (State-Machine)
+Task 3.1 Pre-Flight-Check: Ein Skript schreiben, das den Serverstart blockiert, wenn bereits eine tmux-
+Sitzung, ein DayZ-Prozess (pgrep) oder belegte Game-/RCON-Ports erkannt werden.
+Task 3.2 Firewall-Sperre: Eine temporäre iptables- oder ufw-Regel implementieren, die externe
+Logins auf dem Game-Port während des Hochfahrens blockiert.
+Task 3.3 Dynamischer Start-String: Die Generierung des Start-Befehls inkl. -mod= Parametern
+programmieren und den Start in einer isolierten tmux-Sitzung ausführen.
+Task 3.4 Hive-Monitoring: Eine tail -f-Schleife für die RPT-Logdatei entwickeln, die bei Erkennung
+des Strings "Hive loaded" die Firewall-Sperre automatisch wieder aufhebt.
+AO-Server Tool – Projekt-Backlog Seite 1 von 2
+
+Task 3.5 Start-Timeout: Einen Zähler einbauen, der bei fehlender Hive-Initialisierung nach X Minuten
+den Prozess killt und einen automatischen Neustart triggert.
+EPIC 4 Stopp-Prozedur & Automatisches Backup
+Task 4.1 Status-Validierung: Den Stopp-Befehl verweigern, falls der Server sich noch im Start- bzw.
+Hive-Ladevorgang beﬁndet.
+Task 4.2 RCON-Shutdown-Sequenz: Die bercon-cli-Aufrufe strukturieren: say -1 Warnung mit Timer,
+#lock, #kick aller Spieler, und abschließend #shutdown.
+Task 4.3 Prozess-Warteschleife: Eine Funktion schreiben, die nach dem Shutdown-Befehl sekündlich
+prüft, ob die PID des Servers noch existiert.
+Task 4.4 Automatisches Backup: Ein Skript erstellen, das unmittelbar nach Wegfall der PID ein tar-
+Archiv des storage_1-Ordners mit Zeitstempel anlegt.
+Task 4.5 Fallback-Kill: Eine Timeout-Regel einbauen, die bei hängendem RCON oder nicht reagierendem
+Server einen harten tmux kill-session und kill -9 erzwingt.
+EPIC 5 Automatisierung & CLI-Dashboard
+Task 5.1 CLI-Monitor: Das Hauptmenü programmieren, das das ASCII-Art-Logo, die Live-Status-Anzeige
+und das numerische Auswahlmenü darstellt.
+Task 5.2 Cron-Loop (Schedule): Einen Hintergrundprozess einrichten, der minütlich die Systemzeit mit
+der schedule.cfg abgleicht und bei Treffern die Stopp-/Start-Logik auslöst.
+Task 5.3 Auto-Recovery Stufe 1 & 2: Den Hintergrund-Monitor so konﬁgurieren, dass er bei
+Verbindungsabbruch einen Soft-Restart und bei hängenden Ports einen Hard-Reboot
+durchführt.
+Task 5.4 Auto-Recovery Stufe 3: Einen Log-Scanner implementieren, der bei "Corrupted Data"-Fehlern
+das Server-Verzeichnis sperrt, storage_1 umbenennt und das letzte Backup-Archiv entpackt
+(Rollback).
+AO-Server Tool – Projekt-Backlog Seite 2 von 2
